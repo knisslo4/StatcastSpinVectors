@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Baseball Pitch Trajectory</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+        #controls { position: fixed; top: 10px; left: 10px; z-index: 100; background: rgba(255, 255, 255, 0.8); padding: 10px; border-radius: 5px; }
+        label { display: block; margin-bottom: 5px; }
+        input[type="range"] { width: 200px; }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <label for="spin_x">SpinX: <span id="spin_x_val">0</span></label>
+        <input type="range" id="spin_x" min="-3000" max="3000" step="10" value="0">
+        
+        <label for="spin_y">SpinY: <span id="spin_y_val">0</span></label>
+        <input type="range" id="spin_y" min="-3000" max="3000" step="10" value="0">
+        
+        <label for="spin_z">SpinZ: <span id="spin_z_val">0</span></label>
+        <input type="range" id="spin_z" min="-3000" max="3000" step="10" value="0">
+        
+        <label for="seam_lat">SeamLat: <span id="seam_lat_val">0</span></label>
+        <input type="range" id="seam_lat" min="0" max="360" step="1" value="0">
+        
+        <label for="seam_lon">SeamLon: <span id="seam_lon_val">0</span></label>
+        <input type="range" id="seam_lon" min="0" max="360" step="1" value="0">
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Set up the scene, camera, and renderer
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        var renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Add a grid helper
+        var gridHelper = new THREE.GridHelper(2000, 50);
+        scene.add(gridHelper);
+
+        // Load the baseball texture
+        var textureLoader = new THREE.TextureLoader();
+        var baseballTexture = textureLoader.load('baseball_texture.jpg');
+
+        // Add the baseball (a textured sphere)
+        var baseballGeometry = new THREE.SphereGeometry(5, 32, 32);
+        var baseballMaterial = new
+        THREE.MeshBasicMaterial({map: baseballTexture});
+        var baseball = new THREE.Mesh(baseballGeometry, baseballMaterial);
+        scene.add(baseball);
+        
+        // Add the strike zone (a wireframe box without internal lines)
+        var strikeZoneGeometry = new THREE.BoxGeometry(17, 24, 1);
+        var strikeZoneEdges = new THREE.EdgesGeometry(strikeZoneGeometry);
+        var strikeZoneMaterial = new THREE.LineBasicMaterial({color: 0xff0000});
+        var strikeZone = new THREE.LineSegments(strikeZoneEdges, strikeZoneMaterial);
+        strikeZone.position.set(0, 12, -100);
+        scene.add(strikeZone);
+        
+        camera.position.z = 100;
+        
+        // Update baseball position and rotation based on slider values
+        function updateBaseball() {
+            var spinX = document.getElementById('spin_x').value;
+            var spinY = document.getElementById('spin_y').value;
+            var spinZ = document.getElementById('spin_z').value;
+            var seamLat = document.getElementById('seam_lat').value;
+            var seamLon = document.getElementById('seam_lon').value;
+        
+            document.getElementById('spin_x_val').innerText = spinX;
+            document.getElementById('spin_y_val').innerText = spinY;
+            document.getElementById('spin_z_val').innerText = spinZ;
+            document.getElementById('seam_lat_val').innerText = seamLat;
+            document.getElementById('seam_lon_val').innerText = seamLon;
+        
+            baseball.position.set(spinX / 100, spinY / 100, spinZ / 100);
+            baseball.rotation.x = THREE.Math.degToRad(seamLat);
+            baseball.rotation.y = THREE.Math.degToRad(seamLon);
+        }
+        
+        document.querySelectorAll('input[type="range"]').forEach(input => {
+            input.addEventListener('input', updateBaseball);
+        });
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+        </script>
+        </body>
+        </html>
+        
